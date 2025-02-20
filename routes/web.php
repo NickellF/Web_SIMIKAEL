@@ -20,10 +20,6 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Middleware Autentikasi
 Route::middleware(['auth'])->group(function () {
-    // Rute Profil
-    Route::get('/profil', [AuthController::class, 'profil'])->name('profil');
-    Route::put('/profil', [AuthController::class, 'updateProfil'])->name('profil.update');
-
     // Rute Admin
     Route::middleware(['role:admin'])->group(function () {
         // Dashboard Admin
