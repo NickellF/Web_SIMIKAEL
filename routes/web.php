@@ -50,13 +50,12 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/admin/guru/{guru}', [AdminController::class, 'guruDestroy'])->name('admin.guru.destroy');
 
         // Manajemen Pengajuan
-        Route::get('/admin/pengajuan', [AjuanPklController::class, 'adminIndex'])->name('admin.pengajuan.index');
-        Route::put('/admin/pengajuan/{ajuan}/status', [AjuanPklController::class, 'updateStatus'])->name('admin.pengajuan.status');
-        Route::put('/admin/pengajuan/{id}/status', [AdminController::class, 'updatePengajuanStatus'])->name('admin.pengajuan.status');
-        Route::get('/admin/pengajuan/filter', [AdminController::class, 'filterPengajuan'])
-            ->name('admin.pengajuan.filter');
-        Route::get('/admin/pengajuan/{id}', [AdminController::class, 'detailPengajuan'])
-            ->name('admin.pengajuan.detail');
+        Route::prefix('admin/pengajuan')->name('admin.pengajuan.')->group(function () {
+            Route::get('/', [AdminController::class, 'pengajuanIndex'])->name('index');
+            Route::put('/{id}/status', [AdminController::class, 'updatePengajuanStatus'])->name('status');
+            Route::get('/filter', [AdminController::class, 'filterPengajuan'])->name('filter');
+            Route::get('/{id}', [AdminController::class, 'detailPengajuan'])->name('detail');
+        });
     });
 
     // Rute Guru
@@ -87,8 +86,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/siswa/pengajuan/{ajuanPkl}/cetak', [SiswaController::class, 'cetakPengajuan'])->name('siswa.pengajuan.cetak');
     });
 
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/profile', [App\Http\Controllers\UserController::class, 'profile'])->name('user.profile');
-        Route::put('/profile/update', [App\Http\Controllers\UserController::class, 'updateProfile'])->name('user.profile.update');
-    });
+    // Profile Route
+    Route::get('/profile', [App\Http\Controllers\UserController::class, 'profile'])->name('user.profile');
+    Route::put('/profile/update', [App\Http\Controllers\UserController::class, 'updateProfile'])->name('user.profile.update');
 });

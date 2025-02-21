@@ -4,19 +4,6 @@
 
 @section('content')
 <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-    @if(session('success'))
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
-            <p class="font-bold">Success</p>
-            <p>{{ session('success') }}</p>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-            <p class="font-bold">Error</p>
-            <p>{{ session('error') }}</p>
-        </div>
-    @endif
 
     <div class="flex flex-col sm:flex-row justify-between items-center mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-4 sm:mb-0">Daftar Pengajuan PKL</h1>
@@ -60,23 +47,25 @@
                                 {{ ucfirst($item->status) }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right">
-                            <div class="flex justify-end space-x-3">
-                                <button onclick="showPengajuanDetail({{ json_encode($item) }})" 
-                                    class="text-blue-600 hover:text-blue-800 transition-colors duration-200" title="Detail">
-                                    <i class="fas fa-eye"></i>
-                                </button>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <form action="{{ route('admin.pengajuan.status', $item->id_ajuan) }}" method="POST" class="inline-flex space-x-2">
+                                @csrf
+                                @method('PUT')
                                 @if($item->status == 'pending')
-                                    <button onclick="showKonfirmasiModal({{ $item->id_ajuan }}, 'disetujui', '{{ $item->siswa->nama_siswa }}')" 
-                                        class="text-green-600 hover:text-green-800 transition-colors duration-200" title="Setujui">
-                                        <i class="fas fa-check-circle"></i>
+                                    <button type="submit" name="status" value="disetujui" 
+                                            class="text-green-600 hover:text-green-900 transition duration-150">
+                                        <i class="fas fa-check-circle text-lg"></i>
                                     </button>
-                                    <button onclick="showKonfirmasiModal({{ $item->id_ajuan }}, 'ditolak', '{{ $item->siswa->nama_siswa }}')" 
-                                        class="text-red-600 hover:text-red-800 transition-colors duration-200" title="Tolak">
-                                        <i class="fas fa-times-circle"></i>
+                                    <button type="submit" name="status" value="ditolak" 
+                                            class="text-red-600 hover:text-red-900 transition duration-150">
+                                        <i class="fas fa-times-circle text-lg"></i>
                                     </button>
                                 @endif
-                            </div>
+                                <button type="button" onclick="showPengajuanDetail({{ json_encode($item) }})"
+                                        class="text-blue-600 hover:text-blue-900 transition duration-150">
+                                    <i class="fas fa-eye text-lg"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     @empty
@@ -103,7 +92,7 @@
         <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-gray-900">Detail Pengajuan PKL</h2>
-                <button onclick="closePengajuanDetailModal()" class="text-gray-500 hover:text-gray-700 transition-colors duration-200">
+                <button onclick="closePengajuanDetailModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -112,34 +101,8 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal Konfirmasi Status -->
-    <div id="konfirmasiStatusModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <div class="text-center">
-                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-4">
-                    <i id="konfirmasiIcon" class="text-4xl"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2" id="konfirmasiJudul"></h3>
-                <p class="text-gray-600 mb-6" id="konfirmasiPesan"></p>
-                
-                <form id="konfirmasiForm" method="POST" class="flex justify-center space-x-4">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" name="status" id="konfirmasiStatus">
-                    <button type="button" onclick="closePengajuanKonfirmasiModal()" 
-                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300">
-                        Batal
-                    </button>
-                    <button type="submit" id="konfirmasiButton" 
-                            class="font-bold py-2 px-4 rounded-lg transition duration-300">
-                        Ya, Konfirmasi
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
 </div>
+
 @endsection
 
 @section('styles')
@@ -215,9 +178,64 @@ document.addEventListener('DOMContentLoaded', function() {
             row.style.display = (!selectedStatus || rowStatus === selectedStatus) ? '' : 'none';
         });
     });
+
+    // Action button hover effects
+    const actionButtons = document.querySelectorAll('button[type="submit"], button[type="button"]');
+    actionButtons.forEach(button => {
+        button.addEventListener('mouseenter', function() {
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.classList.add('transform', 'scale-110');
+            }
+        });
+        button.addEventListener('mouseleave', function() {
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.classList.remove('transform', 'scale-110');
+            }
+        });
+    });
 });
 
-// Rest of your modal functions remain the same...
-[Previous JavaScript for modals]
+function showPengajuanDetail(item) {
+    const modal = document.getElementById('pengajuanDetailModal');
+    const content = document.getElementById('modalDetailContent');
+    
+    content.innerHTML = `
+        <div class="space-y-3">
+            <div>
+                <h4 class="text-sm font-medium text-gray-500">Nama Siswa</h4>
+                <p class="text-base text-gray-900">${item.siswa.nama_siswa}</p>
+            </div>
+            <div>
+                <h4 class="text-sm font-medium text-gray-500">Industri</h4>
+                <p class="text-base text-gray-900">${item.industri.nama_industri}</p>
+            </div>
+            <div>
+                <h4 class="text-sm font-medium text-gray-500">Tanggal Mulai</h4>
+                <p class="text-base text-gray-900">${new Date(item.tanggal_mulai).toLocaleDateString()}</p>
+            </div>
+            <div>
+                <h4 class="text-sm font-medium text-gray-500">Tanggal Selesai</h4>
+                <p class="text-base text-gray-900">${new Date(item.tanggal_selesai).toLocaleDateString()}</p>
+            </div>
+            <div>
+                <h4 class="text-sm font-medium text-gray-500">Status</h4>
+                <p class="text-base text-gray-900">${item.status.charAt(0).toUpperCase() + item.status.slice(1)}</p>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.classList.add('modal-open');
+}
+
+function closePengajuanDetailModal() {
+    const modal = document.getElementById('pengajuanDetailModal');
+    modal.classList.remove('flex');
+    modal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+}
 </script>
 @endsection
